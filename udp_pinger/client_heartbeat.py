@@ -2,8 +2,7 @@
   This is a simple heartbeat client It sends signal periodically to server.
 """
 
-import sys, signal, socket
-import time
+import sys, signal, socket, time
 
 # Set global variables
 server_address = ("", 13000)

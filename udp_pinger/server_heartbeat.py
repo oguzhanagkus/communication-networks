@@ -3,8 +3,7 @@
   If there is no signal in specified duration, it is tought as the app is stopped and reported.
 """
 
-import sys, signal, socket
-import datetime
+import sys, signal, socket, datetime
 
 # Set global variables
 server_address = ("", 13000)
