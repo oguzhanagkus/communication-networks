@@ -57,21 +57,17 @@ def client_handler(client_socket, address):
       
     print(filename + " sent to " + address[0])
 
-    # Close client socket
-    client_socket.shutdown(socket.SHUT_RDWR)
-    client_socket.close()
-    
+  # Print and response error message
   except Exception as error:
-    # Print and response error message
     print("Error occured!", error)
     if (error == "Method not allowed!"):
       client_socket.send("HTTP/1.1 405 METHOD NOT ALLOWED\r\n".encode())
     else:
       client_socket.send("HTTP/1.1 404 NOT FOUND\r\n".encode())
 
-    # Close client socket  
-    client_socket.shutdown(socket.SHUT_RDWR)
-    client_socket.close()
+  # Close client socket  
+  client_socket.shutdown(socket.SHUT_RDWR)
+  client_socket.close()
 
 # Main function
 def main():
