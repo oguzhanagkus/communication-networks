@@ -1,13 +1,13 @@
 """
-This is my simple ping client which uses UDP instead of ICMP.
-It sends 10 packets to given address and waits server to send it back.
-It measures the time between sending and recieving back.
-It waits at most 1 second for each packet, it is the timeout value.
-The sequence of 10 packets cannot be interrupted with CTRL+C.
-Finally it prints ping statistics.
+  This is my simple ping client which uses UDP instead of ICMP.
+  It sends 10 packets to given address and waits server to send it back.
+  It measures the time between sending and recieving back.
+  It waits at most 1 second for each packet, it is the timeout value.
+  The sequence of 10 packets cannot be interrupted with CTRL+C.
+  Finally it prints ping statistics.
 """
 
-import socket, signal, datetime
+import sys, signal, socket, socket, datetime
 
 # Set global variables
 server_address = ("", 12000)
@@ -27,7 +27,7 @@ try:
   client_socket.settimeout(1)
 except Exception as error:
   print("Error occured!", error)
-  exit(1)
+  sys.exit(1)
 
 # Set signal handler
 signal.signal(signal.SIGINT, signal_handler)
