@@ -1,16 +1,16 @@
 """
-This is my simple web client which uses HTTP headers.
-It sends a request for single web page.
-You can pass arguments from command line.
-Pass 3 arguments or none:
-  - first argument: server host
-  - second argument: server port
-  - third argument: filename / page
+  This is my simple web client which uses HTTP headers.
+  It sends a request for single web page.
+  You can pass arguments from command line.
+  Pass 3 arguments or none:
+    - first argument: server host
+    - second argument: server port
+    - third argument: filename / page
 
-If you do not pass any arguments, it send request to localhost:80/index.html URL.
+  If you do not pass any arguments, it send request to localhost:80/index.html URL.
 """
 
-import socket, sys
+import sys, socket
 
 # Default arguments
 server_host = "localhost"

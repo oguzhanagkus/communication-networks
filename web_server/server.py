@@ -1,53 +1,34 @@
 """
-This is my simple web server which uses HTTP headers.
-It accepts only GET method and return the requested html page.
-Since it is a simple server, I have only index.html page.
-If you request another page, you will get 404 (Not found).
-If your request include any method rather than GET, you will get 405 (Method not allowed!).
-
-TODO:
-  - Create a thread for each request.
-  - Send favicon.ico
-
-NOTE:
-  - Chrome's mobile application acts a little bit weird.
+  This is my simple web server which uses HTTP headers.
+  It accepts only GET method and return the requested html page.
+  Since it is a simple multithreaded server, I have only index.html page.
+  If you request another page, you will get 404 (Not found).
+  If your request include any method rather than GET, you will get 405 (Method not allowed!).
+  Unsynchronized simultaneous reads are not a problem, so no need to use syncronization methods.
 """
 
-import socket, signal, datetime
+import sys, signal, socket, threading, datetime
 
 # Set global variables
-server_address = ("", 80)
+threads = []
 server_socket = None
+server_address = ("", 80)
 
-# If CTRL+C occurs
+# Signal handler
 def signal_handler(signal, frame):
+  for thread in threads:
+    print(thread.getName())
+    thread.join()
+
   server_socket.close()
-  exit(0)
+  sys.exit(0)
 
-# Prepare socket
-try:
-  server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-  server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-  server_socket.bind(server_address)
-  server_socket.listen(5)
-except Exception as error:
-  print("Error occured!", error)
-  exit(1)
-
-# Set signal handler
-signal.signal(signal.SIGINT, signal_handler)
-
-# Main loop
-while True:
-  # Accept a connection
-  print("Server is ready!")
-  client_socket, address = server_socket.accept()
-  client_socket.settimeout(5)
-
+# Thread function
+def client_handler(client_socket, address):
   try:
     request = client_socket.recv(1024).decode()
     items = request.split()
-    
+      
     request_type = items[0]
     if request_type != "GET":
       raise Exception("Method not allowed!")
@@ -69,17 +50,17 @@ while True:
 
     # Send headers
     client_socket.send(response_message.encode())
-  
+    
     # Send content of the file
     for i in range(len(data)):
       client_socket.send(data[i].encode())
-    
+      
     print(filename + " sent to " + address[0])
 
     # Close client socket
     client_socket.shutdown(socket.SHUT_RDWR)
     client_socket.close()
- 
+    
   except Exception as error:
     # Print and response error message
     print("Error occured!", error)
@@ -91,5 +72,34 @@ while True:
     # Close client socket  
     client_socket.shutdown(socket.SHUT_RDWR)
     client_socket.close()
-  
-server_socket.close()
+
+# Main function
+def main():
+  global threads, server_socket, server_address
+
+  # Prepare socket
+  try:
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    server_socket.bind(server_address)
+    server_socket.listen(10)
+  except Exception as error:
+    print("Error occured!", error)
+    sys.exit(1)
+
+  # Set signal handler
+  signal.signal(signal.SIGINT, signal_handler)
+
+  # Main loop
+  while True:
+    # Accept a connection
+    print("Server is ready!")
+    client_socket, address = server_socket.accept()
+    client_socket.settimeout(5)
+
+    t = threading.Thread(target=client_handler, args=(client_socket, address,))
+    threads.append(t)
+    t.start()
+
+if __name__ == "__main__":
+  main()
