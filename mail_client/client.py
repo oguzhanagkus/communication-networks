@@ -1,17 +1,19 @@
+
 """
-This my simple mail client which uses STMP commands.
-It login to a mail server and send mail to given address.
-
-Set your username and password. Then choose mail server. 
-Gmail and Office 365 servers are given but you can add another server.
-Also update reciever part, subject, and message parts.
-
-TODO:
-  - Send images
+  This my simple mail client which uses STMP commands.
+  It login to a mail server and send mail to given address.
+  Set your username and password. Then choose a mail server. 
+  Gmail and Office 365 servers are given but you can add another server.
+  Also update the "reciever", "subject", and "message" variables.
+  If you want to send an image as an attachment, update "attachment_file" variable wity your image's path.
+  If you do not want to send images, set "attachment_file" variable to NoneType object (None).
+  It uses MIME protocol to send mail with attachments.
 """
 
-import socket, ssl, base64
-import time, signal
+from email.mime.text import MIMEText
+from email.mime.image import MIMEImage
+from email.mime.multipart import MIMEMultipart
+import os, sys, signal, socket, ssl, time, base64
 
 # Set your authentication information
 username = "*****"
@@ -26,9 +28,11 @@ mail_server = gmail
 reciever = "agkusoguzhan@gmail.com"
 subject = "Test Mail From My Client"
 message = "This is my simple SMTP client for term project of CSE476 course.\n\nBest regards.\n\nOguzhan Agkus\n\n"
+attachment_file = "./1.png"
 
 # Global declaration for using in the functions below
 client_socket = None
+content = None
 
 # After connection established, if server returns unexpected reply then call this function
 def exit_handler(message = None, exit_code = 0):
@@ -37,7 +41,7 @@ def exit_handler(message = None, exit_code = 0):
   
   client_socket.send("QUIT\r\n".encode())
   client_socket.close()
-  exit(exit_code)
+  sys.exit(exit_code)
 
 # If CTRL+C occurs
 def signal_handler(signal, frame):
@@ -49,7 +53,7 @@ try:
   client_socket.connect(mail_server)
 except Exception as error:
   print("Error occured!", error)
-  exit(1)
+  sys.exit(1)
 
 # Set signal handler
 signal.signal(signal.SIGINT, signal_handler)
@@ -86,18 +90,17 @@ client_socket.send("AUTH LOGIN\r\n".encode())
 data = client_socket.recv(1024).decode()
 print(data) # It says send username
 
-# Send username first, encode it using base64
+# Send username first, encode it with base64
 client_socket.send(base64.b64encode(username.encode()))
 client_socket.send("\r\n".encode())
 data = client_socket.recv(1024).decode()
 print(data) # It says send password
 
-# Send password then, encode it using base64
+# Send password then, encode it with base64
 client_socket.send(base64.b64encode(password.encode()))
 client_socket.send("\r\n".encode())
 data = client_socket.recv(1024).decode()
 print(data) # Accepted or failed
-
 if data[:3] != "235":
   exit_handler("Authentication failed!", 1)
 
@@ -116,14 +119,33 @@ client_socket.send("DATA\r\n".encode())
 data = client_socket.recv(1024).decode()
 print(data)
 
-# A timestamp to compare outgoing with incoming mail
-timestamp = time.asctime()
-print("--> Sent time:", timestamp, end="\n\n")
+# Timestamp to compare outgoing with incoming mail
+timestamp = "--> Sent time: " + time.asctime()
 
-# Send message data
-client_socket.send("Subject: {}\r\n\r\n".format(subject).encode())
-client_socket.send(message.encode())
-client_socket.send("Sent time: {} \r\n".format(timestamp).encode())
+# Fill content
+content = MIMEMultipart()
+content["From"] = "Oguzhan Agkus"
+content["To"] = reciever
+content["Subject"] = subject
+
+text = MIMEText(message + timestamp)
+content.attach(text)
+
+# Attach image
+if attachment_file != None:
+  try:
+    with open(attachment_file, "rb") as image_file:
+      image_data = image_file.read()
+      image = MIMEImage(image_data, name=os.path.basename(attachment_file))
+      content.attach(image)
+  except Exception as error:
+    print("Cannot add image to mail: ", error)
+
+# Convert MIME object to string
+content = content.as_string()
+
+# Send content
+client_socket.send(content.encode())
 client_socket.send("\r\n.\r\n".encode())
 data = client_socket.recv(1024).decode()
 print(data)
@@ -132,7 +154,7 @@ print(data)
 client_socket.send("QUIT\r\n".encode())
 data = client_socket.recv(1024).decode()
 print(data)
-  
+
 client_socket.close()
 
 print("Successfully completed!")
