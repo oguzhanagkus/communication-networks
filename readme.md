@@ -1,7 +1,7 @@
 # Mobile Communication Network Projects
 
 ## Web Server
-This project is simple mail server that can accept HTTP request packages and send response them.
+This project is simple web server that can accept HTTP request packages and send response them.
 It does not use httplib or another library. It uses only TCP sockets.
 The server accepts only GET requests and return only index.html page.
 Additionally, the project includes a client code that can send HTTP requests.
